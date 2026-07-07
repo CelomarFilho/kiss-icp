@@ -22,6 +22,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <optional>
 #include <sophus/se3.hpp>
 #include <tuple>
 #include <vector>
@@ -51,6 +52,11 @@ struct KISSConfig {
 
     // Motion compensation
     bool deskew = true;
+
+    // Cable-encoder depth anchor (fusao da odometria do cabo -- ver plano secoes 4-5)
+    bool use_cable_anchor = false;                           // liga/desliga a fusao
+    Eigen::Vector3d gravity_dir = Eigen::Vector3d::UnitZ();  // vertical do mundo no frame odom (n)
+    double cable_anchor_weight = 0.0;                        // peso w_z da ancora
 };
 
 class KissICP {
@@ -69,7 +75,8 @@ public:
 
 public:
     Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
-                                      const std::vector<double> &timestamps);
+                                      const std::vector<double> &timestamps,
+                                      std::optional<double> cable_depth = std::nullopt);
     Vector3dVectorTuple Voxelize(const std::vector<Eigen::Vector3d> &frame) const;
 
     std::vector<Eigen::Vector3d> LocalMap() const { return local_map_.Pointcloud(); };

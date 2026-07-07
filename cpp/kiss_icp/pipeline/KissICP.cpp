@@ -33,7 +33,8 @@
 namespace kiss_icp::pipeline {
 
 KissICP::Vector3dVectorTuple KissICP::RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
-                                                    const std::vector<double> &timestamps) {
+                                                    const std::vector<double> &timestamps,
+                                                    std::optional<double> cable_depth) {
     // Preprocess the input cloud
     const auto &preprocessed_frame = preprocessor_.Preprocess(frame, timestamps, last_delta_);
 
@@ -44,14 +45,29 @@ KissICP::Vector3dVectorTuple KissICP::RegisterFrame(const std::vector<Eigen::Vec
     const double sigma = adaptive_threshold_.ComputeThreshold();
 
     // Compute initial_guess for ICP
-    const auto initial_guess = last_pose_ * last_delta_;
+    auto initial_guess = last_pose_ * last_delta_;
 
-    // Run ICP
-    const auto new_pose = registration_.AlignPointsToMap(source,         // frame
-                                                         local_map_,     // voxel_map
-                                                         initial_guess,  // initial_guess
-                                                         3.0 * sigma,    // max_correspondence_dist
-                                                         sigma);         // kernel
+    // Cable-encoder anchor: only active when enabled in config and a depth sample is available
+    const bool cable_anchor_active = config_.use_cable_anchor && cable_depth.has_value();
+    const double cable_weight = cable_anchor_active ? config_.cable_anchor_weight : 0.0;
+    const double cable_z = cable_depth.value_or(0.0);
+
+    // Strategy A: project the initial guess so its depth along gravity_dir matches the cable
+    if (cable_anchor_active) {
+        const Eigen::Vector3d &n = config_.gravity_dir;
+        const double z_pred = n.dot(initial_guess.translation());
+        initial_guess.translation() += (cable_z - z_pred) * n;
+    }
+
+    // Run ICP (Strategy B: soft depth anchor added inside the registration)
+    const auto new_pose = registration_.AlignPointsToMap(source,               // frame
+                                                         local_map_,           // voxel_map
+                                                         initial_guess,        // initial_guess
+                                                         3.0 * sigma,          // max_corr_dist
+                                                         sigma,                // kernel
+                                                         config_.gravity_dir,  // n
+                                                         cable_z,              // cable_depth
+                                                         cable_weight);        // anchor weight
 
     // Compute the difference between the prediction and the actual estimate
     const auto model_deviation = initial_guess.inverse() * new_pose;
