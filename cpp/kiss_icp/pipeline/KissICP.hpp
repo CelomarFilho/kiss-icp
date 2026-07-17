@@ -44,6 +44,7 @@ struct KISSConfig {
     // th parms
     double min_motion_th = 0.1;
     double initial_threshold = 2.0;
+    double fixed_threshold = 0.0;   // <-- NOVO: >0 fixa o threshold
 
     // registration params
     int max_num_iterations = 500;
@@ -53,7 +54,7 @@ struct KISSConfig {
     // Motion compensation
     bool deskew = true;
 
-    // Cable-encoder depth anchor (fusao da odometria do cabo -- ver plano secoes 4-5)
+    // Cable-encoder depth anchor (fusao da odometria do cabo)
     bool use_cable_anchor = false;                           // liga/desliga a fusao
     Eigen::Vector3d gravity_dir = Eigen::Vector3d::UnitZ();  // vertical do mundo no frame odom (n)
     double cable_anchor_weight = 0.0;                        // peso w_z da ancora
@@ -71,7 +72,8 @@ public:
           registration_(
               config.max_num_iterations, config.convergence_criterion, config.max_num_threads),
           local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel),
-          adaptive_threshold_(config.initial_threshold, config.min_motion_th, config.max_range) {}
+          adaptive_threshold_(config.initial_threshold, config.min_motion_th, config.max_range,
+                              config.fixed_threshold) {}
 
 public:
     Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
@@ -86,6 +88,10 @@ public:
 
     const Sophus::SE3d &pose() const { return last_pose_; }
     Sophus::SE3d &pose() { return last_pose_; }
+
+    /// Access the configuration (e.g. to update the cable anchor weight per frame)
+    const KISSConfig &config() const { return config_; }
+    KISSConfig &config() { return config_; }
 
     const Sophus::SE3d &delta() const { return last_delta_; }
     Sophus::SE3d &delta() { return last_delta_; }

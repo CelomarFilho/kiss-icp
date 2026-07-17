@@ -25,6 +25,7 @@
 
 #include <Eigen/Core>
 #include <vector>
+#include <iostream>
 
 #include "kiss_icp/core/Preprocessing.hpp"
 #include "kiss_icp/core/Registration.hpp"
@@ -43,6 +44,7 @@ KissICP::Vector3dVectorTuple KissICP::RegisterFrame(const std::vector<Eigen::Vec
 
     // Get adaptive_threshold
     const double sigma = adaptive_threshold_.ComputeThreshold();
+    //std::cout << "[kiss] threshold = " << sigma << std::endl;   // TEMPORARIO - remover depois
 
     // Compute initial_guess for ICP
     auto initial_guess = last_pose_ * last_delta_;

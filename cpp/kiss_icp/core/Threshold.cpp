@@ -29,9 +29,11 @@
 namespace kiss_icp {
 AdaptiveThreshold::AdaptiveThreshold(double initial_threshold,
                                      double min_motion_threshold,
-                                     double max_range)
+                                     double max_range,
+                                     double fixed_threshold)
     : min_motion_threshold_(min_motion_threshold),
       max_range_(max_range),
+      fixed_threshold_(fixed_threshold),
       model_sse_(initial_threshold * initial_threshold),
       num_samples_(1) {}
 

@@ -27,8 +27,12 @@
 
 // ROS 2
 #include <nav_msgs/msg/odometry.hpp>
+#include <deque>
+#include <mutex>
+#include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include <std_msgs/msg/float64.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <std_srvs/srv/empty.hpp>
 #include <string>
@@ -52,6 +56,13 @@ private:
     /// Register new frame
     void RegisterFrame(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg);
 
+    /// Cable-encoder depth callback (buffers timestamped samples)
+    //void CableDepthCallback(const std_msgs::msg::Float64::ConstSharedPtr &msg);
+    void CableDepthCallback(const nav_msgs::msg::Odometry::ConstSharedPtr &msg);
+
+    /// Interpolate the buffered cable depth at the scan reference timestamp (paper Eq. 7)
+    std::optional<double> InterpolateCableDepth(const rclcpp::Time &t_ref);
+
     /// Stream the estimated pose to ROS
     void PublishOdometry(const Sophus::SE3d &kiss_pose, const std_msgs::msg::Header &header);
 
@@ -73,6 +84,21 @@ private:
 
     /// Data subscribers.
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_sub_;
+    //rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr cable_depth_sub_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr cable_depth_sub_;
+
+    /// Cable-encoder anchor state
+    struct CableSample {
+        double stamp;  // seconds
+        double depth;  // meters (stretch-compensated)
+    };
+    std::deque<CableSample> cable_buffer_;
+    std::mutex cable_mutex_;
+    bool use_cable_anchor_{false};
+    double cable_buffer_seconds_{2.0};
+    double cable_sigma0_{0.01};   // sigma_a(d) = sigma0 + kappa*d   (paper Eq. 14)
+    double cable_kappa_{0.002};
+    double cable_anchor_scale_{1.0};  // extra scale on w_a
 
     /// Data publishers.
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;

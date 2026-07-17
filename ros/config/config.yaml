@@ -4,28 +4,28 @@
 
 kiss_icp_node:
   ros__parameters:
-    ####    /!\ If you set these ROS-related parameters in the file, they will overwrite the corresponding launch arguments   ####
-
-    # base_frame: ""
-    # lidar_odom_frame: "odom_lidar"
-    # publish_odom_tf: True
-    # invert_odom_tf: True
-    # position_covariance: 0.1
-    # orientation_covariance: 0.1
-
-    ####    Core KISS-ICP parameters    ####
-
+    publish_debug_clouds: true
+  
+    cable:
+      use_anchor: true
+      gravity_dir: [0.0, 0.0, 1.0]
+      sigma0: 0.02
+      kappa: 0.002
+      anchor_scale: 1.0
+      buffer_seconds: 2.0
+      
     data:
-      deskew: True
-      max_range: 100.0
-      min_range: 0.0
+      deskew: true
+      max_range: 10.0
+      min_range: 0.1
 
     mapping:
-      # voxel_size: 1.0 # <- optional, default = max_range / 100.0
+      voxel_size: 0.03 # <- optional, default = max_range / 100.0
       max_points_per_voxel: 20
 
     adaptive_threshold:
-      initial_threshold: 2.0
+      fixed_threshold: 0.01 # <- optional, disables adaptive threshold
+      initial_threshold: 0.01
       min_motion_th: 0.1
 
     registration:

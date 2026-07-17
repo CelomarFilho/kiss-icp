@@ -161,8 +161,9 @@ Sophus::SE3d Registration::AlignPointsToMap(const std::vector<Eigen::Vector3d> &
         if (cable_weight > 0.0) {
             const Sophus::SE3d T_cur = T_icp * initial_guess;  // current global estimate
             const double anchor_residual = gravity_dir.dot(T_cur.translation()) - cable_depth;
-            Eigen::Vector6d J_a = Eigen::Vector6d::Zero();
+            Eigen::Vector6d J_a;
             J_a.head<3>() = gravity_dir;  // ordering [translation; rotation]; rot coupling omitted
+            J_a.tail<3>() = T_cur.translation().cross(gravity_dir);  // (t x n)^T   (rotation block)
             JTJ += cable_weight * J_a * J_a.transpose();
             JTr += cable_weight * J_a * anchor_residual;
         }

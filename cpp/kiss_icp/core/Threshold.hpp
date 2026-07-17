@@ -23,23 +23,29 @@
 #pragma once
 
 #include <sophus/se3.hpp>
+#include <cmath>
 
 namespace kiss_icp {
 
 struct AdaptiveThreshold {
     explicit AdaptiveThreshold(double initial_threshold,
                                double min_motion_threshold,
-                               double max_range);
+                               double max_range,
+                               double fixed_threshold = 0.0);  // <=0 desativa (usa adaptativo)
 
     /// Update the current belief of the deviation from the prediction model
     void UpdateModelDeviation(const Sophus::SE3d &current_deviation);
 
-    /// Returns the KISS-ICP adaptive threshold used in registration
-    inline double ComputeThreshold() const { return std::sqrt(model_sse_ / num_samples_); }
+    /// Returns the threshold used in registration (fixed if set, else adaptive)
+    inline double ComputeThreshold() const {
+        if (fixed_threshold_ > 0.0) return fixed_threshold_;
+        return std::sqrt(model_sse_ / num_samples_);
+    }
 
     // configurable parameters
     double min_motion_threshold_;
     double max_range_;
+    double fixed_threshold_;
 
     // Local cache for ccomputation
     double model_sse_;

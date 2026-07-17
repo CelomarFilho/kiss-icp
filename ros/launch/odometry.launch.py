@@ -46,7 +46,10 @@ def generate_launch_description():
 
     # ROS configuration
     pointcloud_topic = LaunchConfiguration("topic")
+    cable_topic = LaunchConfiguration("cable_topic", default="/spool_cable_odom")   # <- NOVO
     visualize = LaunchConfiguration("visualize", default="true")
+    # Desacoplado de 'visualize': permite publicar /kiss/frame sem RViz (mapa headless).
+    publish_debug_clouds = LaunchConfiguration("publish_debug_clouds", default=visualize)
 
     # Optional ros bag play
     bagfile = LaunchConfiguration("bagfile", default="")
@@ -70,6 +73,8 @@ def generate_launch_description():
         output="screen",
         remappings=[
             ("pointcloud_topic", pointcloud_topic),
+            ("cable_depth_topic", cable_topic),        # <- NOVO
+
         ],
         parameters=[
             {
@@ -79,7 +84,7 @@ def generate_launch_description():
                 "publish_odom_tf": publish_odom_tf,
                 "invert_odom_tf": invert_odom_tf,
                 # ROS CLI arguments
-                "publish_debug_clouds": visualize,
+                "publish_debug_clouds": publish_debug_clouds,
                 "use_sim_time": use_sim_time,
                 "position_covariance": position_covariance,
                 "orientation_covariance": orientation_covariance,
