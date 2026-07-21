@@ -58,6 +58,7 @@ struct KISSConfig {
     bool use_cable_anchor = false;                           // liga/desliga a fusao
     Eigen::Vector3d gravity_dir = Eigen::Vector3d::UnitZ();  // vertical do mundo no frame odom (n)
     double cable_anchor_weight = 0.0;                        // peso w_z da ancora
+    double attitude_weight = 0.0;   // prior de roll/pitch (pendulo); 0 = desligado
 };
 
 class KissICP {

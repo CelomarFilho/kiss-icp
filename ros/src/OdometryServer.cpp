@@ -139,6 +139,7 @@ void OdometryServer::initializeParameters(kiss_icp::pipeline::KISSConfig &config
     // ---- Cable-encoder depth anchor -------------------------------------------------
     use_cable_anchor_ = declare_parameter<bool>("cable.use_anchor", false);
     config.use_cable_anchor = use_cable_anchor_;
+    config.attitude_weight = declare_parameter<double>("cable.attitude_weight", 0.0);
     cable_buffer_seconds_ = declare_parameter<double>("cable.buffer_seconds", 2.0);
     cable_sigma0_ = declare_parameter<double>("cable.sigma0", 0.01);
     cable_kappa_ = declare_parameter<double>("cable.kappa", 0.002);

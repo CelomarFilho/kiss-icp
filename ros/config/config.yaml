@@ -13,14 +13,15 @@ kiss_icp_node:
       kappa: 0.002
       anchor_scale: 1.0
       buffer_seconds: 2.0
+      attitude_weight: 50.0  # <- forces roll/pitch to be 0  
       
     data:
       deskew: true
       max_range: 10.0
-      min_range: 0.1
+      min_range: 0.15
 
     mapping:
-      voxel_size: 0.03 # <- optional, default = max_range / 100.0
+      voxel_size: 0.02 # <- optional, default = max_range / 100.0
       max_points_per_voxel: 20
 
     adaptive_threshold:

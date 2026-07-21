@@ -69,7 +69,8 @@ KissICP::Vector3dVectorTuple KissICP::RegisterFrame(const std::vector<Eigen::Vec
                                                          sigma,                // kernel
                                                          config_.gravity_dir,  // n
                                                          cable_z,              // cable_depth
-                                                         cable_weight);        // anchor weight
+                                                         cable_weight,           // anchor weight
+                                                         config_.attitude_weight);  // roll/pitch prior
 
     // Compute the difference between the prediction and the actual estimate
     const auto model_deviation = initial_guess.inverse() * new_pose;

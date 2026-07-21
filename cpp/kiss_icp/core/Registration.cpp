@@ -142,7 +142,8 @@ Sophus::SE3d Registration::AlignPointsToMap(const std::vector<Eigen::Vector3d> &
                                             const double kernel_scale,
                                             const Eigen::Vector3d &gravity_dir,
                                             const double cable_depth,
-                                            const double cable_weight) {
+                                            const double cable_weight,
+                                            const double attitude_weight) {
     if (voxel_map.Empty()) return initial_guess;
 
     // Equation (9)
@@ -156,17 +157,29 @@ Sophus::SE3d Registration::AlignPointsToMap(const std::vector<Eigen::Vector3d> &
         const auto correspondences = DataAssociation(source, voxel_map, max_distance);
         // Equation (11)
         auto [JTJ, JTr] = BuildLinearSystem(correspondences, kernel_scale);
-        // Cable-encoder depth anchor (soft absolute constraint along gravity_dir).
-        // Adds curvature on the degenerate vertical DoF: JTJ += w*Ja*Ja^T ; JTr += w*Ja*r.
+
+        // --- Cable-encoder depth anchor (Estrategia B) 
         if (cable_weight > 0.0) {
-            const Sophus::SE3d T_cur = T_icp * initial_guess;  // current global estimate
+            const Sophus::SE3d T_cur = T_icp * initial_guess;
             const double anchor_residual = gravity_dir.dot(T_cur.translation()) - cable_depth;
             Eigen::Vector6d J_a;
-            J_a.head<3>() = gravity_dir;  // ordering [translation; rotation]; rot coupling omitted
-            J_a.tail<3>() = T_cur.translation().cross(gravity_dir);  // (t x n)^T   (rotation block)
+            J_a.head<3>() = gravity_dir;
+            J_a.tail<3>() = T_cur.translation().cross(gravity_dir);
             JTJ += cable_weight * J_a * J_a.transpose();
             JTr += cable_weight * J_a * anchor_residual;
         }
+
+        // --- Roll/pitch prior
+        if (attitude_weight > 0.0) {
+            const Sophus::SE3d T_att = T_icp * initial_guess;
+            const Eigen::Vector3d phi = T_att.so3().log();
+            const Eigen::Matrix3d P =
+                Eigen::Matrix3d::Identity() - gravity_dir * gravity_dir.transpose();
+            const Eigen::Vector3d r_att = P * phi;
+            JTJ.block<3, 3>(3, 3) += attitude_weight * P;
+            JTr.segment<3>(3) += attitude_weight * r_att;
+        }
+
         const Eigen::Vector6d dx = JTJ.ldlt().solve(-JTr);
         const Sophus::SE3d estimation = Sophus::SE3d::exp(dx);
         // Equation (12)

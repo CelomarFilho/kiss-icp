@@ -40,7 +40,8 @@ struct Registration {
                                   const double kernel_scale,
                                   const Eigen::Vector3d &gravity_dir = Eigen::Vector3d(0.0, 0.0, 1.0),
                                   const double cable_depth = 0.0,
-                                  const double cable_weight = 0.0);
+                                  const double cable_weight = 0.0,
+                                  const double attitude_weight = 0.0);
 
     int max_num_iterations_;
     double convergence_criterion_;
