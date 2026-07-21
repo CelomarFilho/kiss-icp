@@ -44,7 +44,7 @@ struct KISSConfig {
     // th parms
     double min_motion_th = 0.1;
     double initial_threshold = 2.0;
-    double fixed_threshold = 0.0;   // <-- NOVO: >0 fixa o threshold
+    double fixed_threshold = 0.0;   // fixa o threshold
 
     // registration params
     int max_num_iterations = 500;

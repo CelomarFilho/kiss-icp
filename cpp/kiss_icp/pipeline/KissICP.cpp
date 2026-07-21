@@ -44,7 +44,7 @@ KissICP::Vector3dVectorTuple KissICP::RegisterFrame(const std::vector<Eigen::Vec
 
     // Get adaptive_threshold
     const double sigma = adaptive_threshold_.ComputeThreshold();
-    //std::cout << "[kiss] threshold = " << sigma << std::endl;   // TEMPORARIO - remover depois
+    //std::cout << "[kiss] threshold = " << sigma << std::endl;   // TEMPORARIO
 
     // Compute initial_guess for ICP
     auto initial_guess = last_pose_ * last_delta_;
@@ -82,7 +82,6 @@ KissICP::Vector3dVectorTuple KissICP::RegisterFrame(const std::vector<Eigen::Vec
     last_pose_ = new_pose;
 
     // Return the (deskew) input raw scan (preprocessed_frame) and the points used for registration
-    // (source)
     return {preprocessed_frame, source};
 }
 

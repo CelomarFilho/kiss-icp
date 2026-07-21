@@ -136,7 +136,7 @@ void OdometryServer::initializeParameters(kiss_icp::pipeline::KISSConfig &config
     orientation_covariance_ = declare_parameter<double>("orientation_covariance", 0.1);
     RCLCPP_INFO(this->get_logger(), "\tOrientation covariance: %.2f", orientation_covariance_);
 
-    // ---- Cable-encoder depth anchor -------------------------------------------------
+    // Cable-encoder depth anchor
     use_cable_anchor_ = declare_parameter<bool>("cable.use_anchor", false);
     config.use_cable_anchor = use_cable_anchor_;
     config.attitude_weight = declare_parameter<double>("cable.attitude_weight", 0.0);
@@ -144,7 +144,7 @@ void OdometryServer::initializeParameters(kiss_icp::pipeline::KISSConfig &config
     cable_sigma0_ = declare_parameter<double>("cable.sigma0", 0.01);
     cable_kappa_ = declare_parameter<double>("cable.kappa", 0.002);
     cable_anchor_scale_ = declare_parameter<double>("cable.anchor_scale", 1.0);
-    // Shaft-axis direction n in the odometry world frame (paper Eq. 5).
+    // Shaft-axis direction n in the odometry world frame
     const auto n = declare_parameter<std::vector<double>>("cable.gravity_dir",
                                                           std::vector<double>{0.0, 0.0, 1.0});
     if (n.size() == 3) {
@@ -196,7 +196,7 @@ void OdometryServer::initializeParameters(kiss_icp::pipeline::KISSConfig &config
 }
 
 void OdometryServer::CableDepthCallback(const nav_msgs::msg::Odometry::ConstSharedPtr &msg) {
-    const double t = rclcpp::Time(msg->header.stamp).seconds();   // stamp proprio (Eq. 7)
+    const double t = rclcpp::Time(msg->header.stamp).seconds(); 
     const double depth = msg->pose.pose.position.z;               // deslocamento do cabo
     std::lock_guard<std::mutex> lock(cable_mutex_);
     cable_buffer_.push_back({t, depth});
@@ -212,7 +212,7 @@ std::optional<double> OdometryServer::InterpolateCableDepth(const rclcpp::Time &
     if (cable_buffer_.size() < 2) return std::nullopt;
     if (t <= cable_buffer_.front().stamp) return cable_buffer_.front().depth;
     if (t >= cable_buffer_.back().stamp) return cable_buffer_.back().depth;
-    // Linear interpolation at the scan reference timestamp (paper Eq. 7)
+    // Linear interpolation at the scan reference timestamp
     for (std::size_t i = 0; i + 1 < cable_buffer_.size(); ++i) {
         const auto &a = cable_buffer_[i];
         const auto &b = cable_buffer_[i + 1];
@@ -236,7 +236,7 @@ void OdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::ConstSha
     if (use_cable_anchor_) {
         cable_depth = InterpolateCableDepth(rclcpp::Time(msg->header.stamp));
         if (cable_depth.has_value()) {
-            // sigma_a(d) = sigma0 + kappa*d  ->  w_a = scale / sigma_a^2   (paper Eq. 14)
+            // sigma_a(d) = sigma0 + kappa*d  ->  w_a = scale / sigma_a^2 
             const double sigma = cable_sigma0_ + cable_kappa_ * std::abs(cable_depth.value());
             kiss_icp_->config().cable_anchor_weight =
                 (sigma > 1e-9) ? cable_anchor_scale_ / (sigma * sigma) : 0.0;

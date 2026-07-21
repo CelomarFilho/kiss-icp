@@ -96,7 +96,7 @@ private:
     std::mutex cable_mutex_;
     bool use_cable_anchor_{false};
     double cable_buffer_seconds_{2.0};
-    double cable_sigma0_{0.01};   // sigma_a(d) = sigma0 + kappa*d   (paper Eq. 14)
+    double cable_sigma0_{0.01};   // sigma_a(d) = sigma0 + kappa*d 
     double cable_kappa_{0.002};
     double cable_anchor_scale_{1.0};  // extra scale on w_a
 
